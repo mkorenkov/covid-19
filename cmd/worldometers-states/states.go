@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/mkorenkov/covid-19-parser/worldometers"
+	"github.com/mkorenkov/covid-19/worldometers"
 )
 
 func main() {

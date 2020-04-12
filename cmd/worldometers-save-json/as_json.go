@@ -9,9 +9,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mkorenkov/covid-19-parser/worldometers"
+	"github.com/mkorenkov/covid-19/worldometers"
 	"github.com/pkg/errors"
 )
+
+const (
+	envStorageDir     = "STORAGE_DIR"
+	defaultStorageDir = "/srv/data/covid-19"
+)
+
+func baseDir() string {
+	if res := os.Getenv(envStorageDir); res != "" {
+		return res
+	}
+	return defaultStorageDir
+}
 
 func fileName(countryOrState string) string {
 	res := strings.ToLower(countryOrState)
@@ -35,7 +47,7 @@ func jsonDump(targetDir string, name string, payload interface{}) error {
 }
 
 func main() {
-	targetDir := path.Join("/tmp/json", time.Now().Format(time.RFC3339))
+	targetDir := path.Join(baseDir(), time.Now().Format(time.RFC3339))
 	_, err := os.Stat(targetDir)
 	if os.IsNotExist(err) {
 		errDir := os.MkdirAll(targetDir, 0755)

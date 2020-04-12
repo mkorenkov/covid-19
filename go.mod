@@ -1,4 +1,4 @@
-module github.com/mkorenkov/covid-19-parser
+module github.com/mkorenkov/covid-19
 
 go 1.14
 
