@@ -1,14 +1,17 @@
-package main
+package worldometers
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/mkorenkov/covid-19-parser/worldofmeters"
+	"github.com/pkg/errors"
 	"golang.org/x/net/html"
+)
+
+const (
+	countriesURL = "https://www.worldometers.info/coronavirus/"
+	statesURL    = "https://www.worldometers.info/coronavirus/country/us/"
 )
 
 // htmlTableToArrays converts given table to text only array of arrays
@@ -42,18 +45,19 @@ func readText(n *html.Node) string {
 	return ""
 }
 
-func scrapeCountries() {
-	res, err := http.Get("https://www.worldometers.info/coronavirus/")
+// Countries scrapes worldometers and returns per country information.
+func Countries() (map[string]*Country, error) {
+	res, err := http.Get(countriesURL)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.Wrap(err, "HTTP request failure")
 	}
 	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("HTTP Status %d", res.StatusCode)
 	}
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.Wrap(err, "goquery error")
 	}
 
 	rows := []*html.Node{}
@@ -61,32 +65,32 @@ func scrapeCountries() {
 		rows = append(rows, trSel.Nodes...)
 	})
 	srcTable := htmlTableToArrays(rows)
-	dataSource := map[string]interface{}{}
+	dataSource := map[string]*Country{}
 	for _, row := range srcTable {
 		if len(row) > 1 {
-			record, err := worldofmeters.NewCountryFromRecord(row)
+			record, err := newCountryFromRecord(row)
 			if err != nil {
-				log.Fatal(err)
+				return nil, errors.Wrap(err, "country parse error")
 			}
 			dataSource[row[0]] = record
 		}
 	}
-	fmt.Println(dataSource["USA"])
-	fmt.Println(dataSource["Russia"])
+	return dataSource, nil
 }
 
-func scrapeUSA() {
-	res, err := http.Get("https://www.worldometers.info/coronavirus/country/us/")
+// States scrapes worldometers and returns per state information.
+func States() (map[string]*UnitedState, error) {
+	res, err := http.Get(statesURL)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.Wrap(err, "HTTP request failure")
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+		return nil, errors.Errorf("HTTP Status %d", res.StatusCode)
 	}
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.Wrap(err, "goquery error")
 	}
 
 	rows := []*html.Node{}
@@ -94,20 +98,15 @@ func scrapeUSA() {
 		rows = append(rows, trSel.Nodes...)
 	})
 	srcTable := htmlTableToArrays(rows)
-	dataSource := map[string]interface{}{}
+	dataSource := map[string]*UnitedState{}
 	for _, row := range srcTable {
 		if len(row) > 1 {
-			record, err := worldofmeters.NewStateFromRecord(row)
+			record, err := newStateFromRecord(row)
 			if err != nil {
-				log.Fatal(err)
+				return nil, errors.Wrap(err, "state parse error")
 			}
 			dataSource[row[0]] = record
 		}
 	}
-	fmt.Println(dataSource["New York"])
-	fmt.Println(dataSource["California"])
-}
-
-func main() {
-	scrapeCountries()
+	return dataSource, nil
 }

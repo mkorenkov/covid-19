@@ -1,4 +1,4 @@
-package worldofmeters
+package worldometers
 
 import (
 	"strconv"

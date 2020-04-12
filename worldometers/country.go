@@ -1,9 +1,10 @@
-package worldofmeters
+package worldometers
 
 import (
 	"github.com/pkg/errors"
 )
 
+// Country single row from worldometers
 type Country struct {
 	Name           string  `json:"name"`
 	TotalCases     uint64  `json:"total_cases"`
@@ -18,7 +19,7 @@ type Country struct {
 	Region         string  `json:"region"`
 }
 
-func NewCountryFromRecord(data []string) (*Country, error) {
+func newCountryFromRecord(data []string) (*Country, error) {
 	if data == nil || len(data) < 10 {
 		return nil, errors.New("13 data items required to parse country")
 	}

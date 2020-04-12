@@ -1,0 +1,20 @@
+name: go_test
+
+on: [push, pull_request]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: install go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.14
+
+    - name: go test
+      run: go test ./...
+    - name: go build
+      run: |
+        mkdir -p bin
+        ls cmd/*/*.go | xargs -n 1 -P 1 -I % bash -c 'GOOS=linux GOARCH=amd64 go build -o bin/cmd %'
