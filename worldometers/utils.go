@@ -12,21 +12,25 @@ func trimCommas(v string) string {
 }
 
 func parseUint(dataItem string) (result uint64, err error) {
-	if dataItem != "" {
-		result, err = strconv.ParseUint(trimCommas(dataItem), 10, 64)
-		if err != nil {
-			return result, errors.Wrapf(err, "failed to parse uint %v", dataItem)
-		}
+	res := strings.TrimSpace(dataItem)
+	if dataItem == "" || dataItem == "N/A" {
+		return result, nil
+	}
+	result, err = strconv.ParseUint(trimCommas(res), 10, 64)
+	if err != nil {
+		return result, errors.Wrapf(err, "failed to parse uint %v", res)
 	}
 	return result, nil
 }
 
 func parseFloat(dataItem string) (result float64, err error) {
-	if dataItem != "" {
-		result, err = strconv.ParseFloat(trimCommas(dataItem), 64)
-		if err != nil {
-			return result, errors.Wrapf(err, "failed to parse float %v", dataItem)
-		}
+	res := strings.TrimSpace(dataItem)
+	if dataItem == "" || dataItem == "N/A" {
+		return result, nil
+	}
+	result, err = strconv.ParseFloat(trimCommas(res), 64)
+	if err != nil {
+		return result, errors.Wrapf(err, "failed to parse float %v", res)
 	}
 	return result, nil
 }
