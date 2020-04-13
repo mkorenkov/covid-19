@@ -1,10 +1,12 @@
 package worldometers
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/mkorenkov/covid-19/httpclient"
 	"github.com/pkg/errors"
 	"golang.org/x/net/html"
 )
@@ -46,16 +48,18 @@ func readText(n *html.Node) string {
 }
 
 // Countries scrapes worldometers and returns per country information.
-func Countries() (map[string]*Country, error) {
-	res, err := http.Get(countriesURL)
+func Countries(ctx context.Context) (map[string]*Country, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", countriesURL, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error creating HTTP request")
+	}
+
+	res, err := httpclient.Do(ctx, req)
 	if err != nil {
 		return nil, errors.Wrap(err, "HTTP request failure")
 	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("HTTP Status %d", res.StatusCode)
-	}
-	doc, err := goquery.NewDocumentFromReader(res.Body)
+	defer res.Close()
+	doc, err := goquery.NewDocumentFromReader(res)
 	if err != nil {
 		return nil, errors.Wrap(err, "goquery error")
 	}
@@ -79,16 +83,18 @@ func Countries() (map[string]*Country, error) {
 }
 
 // States scrapes worldometers and returns per state information.
-func States() (map[string]*UnitedState, error) {
-	res, err := http.Get(statesURL)
+func States(ctx context.Context) (map[string]*UnitedState, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", statesURL, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error creating HTTP request")
+	}
+
+	res, err := httpclient.Do(ctx, req)
 	if err != nil {
 		return nil, errors.Wrap(err, "HTTP request failure")
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return nil, errors.Errorf("HTTP Status %d", res.StatusCode)
-	}
-	doc, err := goquery.NewDocumentFromReader(res.Body)
+	defer res.Close()
+	doc, err := goquery.NewDocumentFromReader(res)
 	if err != nil {
 		return nil, errors.Wrap(err, "goquery error")
 	}

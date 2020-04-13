@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -47,6 +48,8 @@ func jsonDump(targetDir string, name string, payload interface{}) error {
 }
 
 func main() {
+	ctx := context.Background()
+
 	targetDir := path.Join(baseDir(), time.Now().Format(time.RFC3339))
 	_, err := os.Stat(targetDir)
 	if os.IsNotExist(err) {
@@ -56,11 +59,11 @@ func main() {
 		}
 	}
 
-	countries, err := worldometers.Countries()
+	countries, err := worldometers.Countries(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	states, err := worldometers.States()
+	states, err := worldometers.States(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
