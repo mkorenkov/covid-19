@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mkorenkov/covid-19/pkg/httpclient"
 	"github.com/mkorenkov/covid-19/worldometers"
 	"github.com/pkg/errors"
 )
@@ -75,11 +76,11 @@ func scrapeData(ctx context.Context) error {
 		}
 	}
 
-	countries, err := worldometers.Countries(ctx)
+	countries, err := worldometers.Countries(ctx, httpclient.Retryable())
 	if err != nil {
 		return errors.Wrap(err, "error scraping per country values")
 	}
-	states, err := worldometers.States(ctx)
+	states, err := worldometers.States(ctx, httpclient.Retryable())
 	if err != nil {
 		return errors.Wrap(err, "error scraping United States values")
 	}

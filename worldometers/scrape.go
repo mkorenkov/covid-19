@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/mkorenkov/covid-19/httpclient"
 	"github.com/pkg/errors"
 	"golang.org/x/net/html"
 )
@@ -15,6 +14,11 @@ const (
 	countriesURL = "https://www.worldometers.info/coronavirus/"
 	statesURL    = "https://www.worldometers.info/coronavirus/country/us/"
 )
+
+// HTTPClient common interface for many HTTP clients, including http.client from stdlib.
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 // htmlTableToArrays converts given table to text only array of arrays
 func htmlTableToArrays(rows []*html.Node) [][]string {
@@ -48,18 +52,19 @@ func readText(n *html.Node) string {
 }
 
 // Countries scrapes worldometers and returns per country information.
-func Countries(ctx context.Context) (map[string]*Country, error) {
+func Countries(ctx context.Context, httpclient HTTPClient) (map[string]*Country, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", countriesURL, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating HTTP request")
 	}
+	req = req.WithContext(ctx)
 
-	res, err := httpclient.Do(ctx, req)
+	res, err := httpclient.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "HTTP request failure")
 	}
-	defer res.Close()
-	doc, err := goquery.NewDocumentFromReader(res)
+	defer res.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "goquery error")
 	}
@@ -83,18 +88,19 @@ func Countries(ctx context.Context) (map[string]*Country, error) {
 }
 
 // States scrapes worldometers and returns per state information.
-func States(ctx context.Context) (map[string]*UnitedState, error) {
+func States(ctx context.Context, httpclient HTTPClient) (map[string]*UnitedState, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", statesURL, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating HTTP request")
 	}
+	req = req.WithContext(ctx)
 
-	res, err := httpclient.Do(ctx, req)
+	res, err := httpclient.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "HTTP request failure")
 	}
-	defer res.Close()
-	doc, err := goquery.NewDocumentFromReader(res)
+	defer res.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "goquery error")
 	}
