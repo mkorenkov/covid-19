@@ -11,6 +11,18 @@ func trimCommas(v string) string {
 	return strings.ReplaceAll(v, ",", "")
 }
 
+func parseInt(dataItem string) (result int, err error) {
+	res := strings.TrimSpace(dataItem)
+	if dataItem == "" || dataItem == "N/A" {
+		return result, nil
+	}
+	result, err = strconv.Atoi(trimCommas(res))
+	if err != nil {
+		return result, errors.Wrapf(err, "failed to parse int %v", res)
+	}
+	return result, nil
+}
+
 func parseUint(dataItem string) (result uint64, err error) {
 	res := strings.TrimSpace(dataItem)
 	if dataItem == "" || dataItem == "N/A" {

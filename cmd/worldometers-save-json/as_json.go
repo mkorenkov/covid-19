@@ -49,6 +49,8 @@ func fileName(countryOrState string) string {
 	res := strings.ToLower(countryOrState)
 	res = strings.ReplaceAll(res, ". ", "_")
 	res = strings.ReplaceAll(res, " ", "_")
+	res = strings.ReplaceAll(res, ".", "_")
+	res = strings.ReplaceAll(res, ":", "_")
 	return fmt.Sprintf("%s.json", res)
 }
 

@@ -16,53 +16,66 @@ type Country struct {
 	CasesPer1M     float64 `json:"cases_per_1m"`
 	DeathsPer1M    float64 `json:"deaths_per_1m"`
 	TestsPer1M     float64 `json:"tests_per_1m"`
+	Population     uint64  `json:"population"`
 	Region         string  `json:"region"`
 }
 
 func newCountryFromRecord(data []string) (*Country, error) {
-	if data == nil || len(data) < 10 {
-		return nil, errors.New("13 data items required to parse country")
+	if data == nil || len(data) < 15 {
+		return nil, errors.New("15 data items required to parse country")
 	}
 
-	totalCases, err := parseUint(data[1])
+	totalCases, err := parseUint(data[2])
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse total cases")
+		return nil, errors.Wrapf(err, "failed to parse total cases")
 	}
-	totalDeaths, err := parseUint(data[3])
+	totalDeaths, err := parseUint(data[4])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total deaths")
 	}
-	totalRecovered, err := parseUint(data[5])
+	totalRecovered, err := parseUint(data[6])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total recoverred")
 	}
-	totalTests, err := parseUint(data[10])
+	totalTests, err := parseUint(data[11])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total tests")
 	}
-	activeCases, err := parseUint(data[6])
+	var activeCases uint64
+	// https://github.com/mkorenkov/covid-19/issues/1
+	possibleNegativeActiveCases, err := parseInt(data[7])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse active cases")
 	}
-	criticalCases, err := parseUint(data[7])
+	if possibleNegativeActiveCases > 0 {
+		activeCases, err = parseUint(data[7])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse active cases")
+		}
+	}
+	criticalCases, err := parseUint(data[8])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse critical cases")
 	}
-	cases1m, err := parseFloat(data[8])
+	cases1m, err := parseFloat(data[9])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse cases per 1M")
 	}
-	deaths1m, err := parseFloat(data[9])
+	deaths1m, err := parseFloat(data[10])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse deaths per 1M")
 	}
-	tests1m, err := parseFloat(data[11])
+	tests1m, err := parseFloat(data[12])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse tests per 1M")
 	}
+	population, err := parseUint(data[13])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse population")
+	}
 
 	return &Country{
-		Name:           data[0],
+		Name:           data[1],
 		TotalCases:     totalCases,
 		TotalDeaths:    totalDeaths,
 		TotalRecovered: totalRecovered,
@@ -72,6 +85,7 @@ func newCountryFromRecord(data []string) (*Country, error) {
 		CasesPer1M:     cases1m,
 		DeathsPer1M:    deaths1m,
 		TestsPer1M:     tests1m,
-		Region:         data[12],
+		Population:     population,
+		Region:         data[14],
 	}, nil
 }
