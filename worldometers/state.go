@@ -31,9 +31,17 @@ func newStateFromRecord(data []string) (*UnitedState, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total tests")
 	}
-	activeCases, err := parseUint(data[5])
+	var activeCases uint64
+	// https://github.com/mkorenkov/covid-19/issues/1
+	possibleNegativeActiveCases, err := parseInt(data[5])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse active cases")
+	}
+	if possibleNegativeActiveCases > 0 {
+		activeCases, err = parseUint(data[5])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse active cases")
+		}
 	}
 	cases1m, err := parseFloat(data[6])
 	if err != nil {
