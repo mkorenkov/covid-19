@@ -9,7 +9,7 @@ type Config struct {
 	S3Endpoint     string            `split_words:"true"`
 	S3Bucket       string            `split_words:"true" required:"true"`
 	StorageDir     string            `split_words:"true" default:"/srv/data/covid-19"`
-	ScrapeInterval time.Duration     `split_words:"true" default:"1m"`
+	ScrapeInterval time.Duration     `split_words:"true" default:"59m"`
 	ListenAddr     string            `split_words:"true" default:":8000"`
 	Credentials    map[string]string `split_words:"true" required:"true"` // comma separated user:password pairs
 }

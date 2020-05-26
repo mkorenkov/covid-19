@@ -2,8 +2,9 @@ package backup
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
-	"fmt"
+	"path"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +21,7 @@ import (
 const (
 	repeaterFactor = 1.5
 	repeatTimes    = 5
+	perFileDocPath = "2006-01-02/15/2006-01-02T15:04:05Z07:00.json.gz"
 )
 
 // S3Config describes most common configuration options for S3-like storage.
@@ -31,29 +33,45 @@ type S3Config interface {
 	GetSecret() string
 }
 
-func key(doc documents.CollectionEntry) string {
+func key(prefix string, doc documents.CollectionEntry) string {
 	name := strings.TrimSpace(doc.GetName())
 	if name == "" {
 		return ""
+	}
+	pathParts := []string{}
+	if prefix != "" {
+		pathParts = append(pathParts, prefix)
 	}
 	name = strings.ToLower(name)
 	name = strings.ReplaceAll(name, ". ", "_")
 	name = strings.ReplaceAll(name, " ", "_")
 	name = strings.ReplaceAll(name, ".", "_")
-	keyFormat := fmt.Sprintf("covid19/%v/2006-01-02/15/2006-01-02T15:04:05Z07:00.json", name)
-	return doc.GetWhen().Format(keyFormat)
+	pathParts = append(pathParts, name, doc.GetWhen().Format(perFileDocPath))
+	return path.Join(pathParts...)
 }
 
 // Upload uploads Country / State information to S3 using the client.
-func Upload(ctx context.Context, s3Client *s3.S3, bucket string, doc documents.CollectionEntry) error {
-	docKey := key(doc)
+func Upload(ctx context.Context, s3Client *s3.S3, bucketWithPath string, doc documents.CollectionEntry) error {
+	bucketPath := strings.Split(bucketWithPath, "/")
+	bucket := bucketPath[0]
+	prefix := ""
+	if len(bucketPath) > 1 {
+		prefix = path.Join(bucketPath[1:]...)
+	}
+
+	docKey := key(prefix, doc)
 	if docKey == "" {
 		return errors.New("Failed to create doc key")
 	}
 
 	var b bytes.Buffer // Buffer needs no initialization.
-	if err := doc.Save(&b); err != nil {
+	w := gzip.NewWriter(&b)
+	if err := doc.Save(w); err != nil {
 		return errors.Wrap(err, "Failed to save document")
+	}
+	err := w.Close()
+	if err != nil {
+		return errors.Wrap(err, "Failed to Close() gzip writer")
 	}
 
 	f := func() error {

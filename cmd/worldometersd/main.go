@@ -81,8 +81,8 @@ func main() {
 	api := r.PathPrefix("/api/v1/").Subrouter()
 	api.HandleFunc("/countries", server.HomeHandler).Methods("GET")
 	api.HandleFunc("/states", server.HomeHandler).Methods("GET")
-	api.HandleFunc("/countries/{country}", server.HomeHandler).Methods("GET")
-	api.HandleFunc("/states/{state}", server.HomeHandler).Methods("GET")
+	api.HandleFunc("/countries/{country}", server.CountryDatapointsHandler).Methods("GET")
+	api.HandleFunc("/states/{state}", server.StateDatapointsHandler).Methods("GET")
 
 	log.Printf("[INFO] Listening %s\n", cfg.ListenAddr)
 

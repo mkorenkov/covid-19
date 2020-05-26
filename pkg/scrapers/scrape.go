@@ -2,11 +2,10 @@ package scrapers
 
 import (
 	"context"
-	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/mkorenkov/covid-19/pkg/documents"
 	"github.com/mkorenkov/covid-19/pkg/httpclient"
 	"github.com/mkorenkov/covid-19/pkg/requestcontext"
@@ -35,51 +34,36 @@ func Countries(ctx context.Context, interval time.Duration, backups chan<- docum
 		panic(errors.New("Could not retrieve error chan from context"))
 	}
 
+	onTicker := func() {
+		log.Println("[DEBUG] Scraping countries")
+		rawCountries, err := worldometers.Countries(ctx, httpclient.Retryable())
+		if err != nil {
+			errorChan <- errors.Wrap(err, "error scraping Countries values")
+		}
+		countryDocs := []documents.CollectionEntry{}
+		for _, country := range rawCountries {
+			if country.Name == "" {
+				continue
+			}
+			countryDoc := documents.FromCountry(*country)
+			backups <- countryDoc
+			countryDocs = append(countryDocs, *countryDoc)
+		}
+		err = documents.BulkSave(db, CountryCollection, countryDocs)
+		if err != nil {
+			errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", CountryCollection)
+		}
+		log.Printf("[INFO] Done scraping countries. Sleeping %s \n", interval)
+	}
+
+	// force the first run on the app start
+	onTicker()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			log.Println("[DEBUG] Scraping countries")
-			countries, err := worldometers.Countries(ctx, httpclient.Retryable())
-			if err != nil {
-				errorChan <- errors.Wrap(err, "error scraping United States values")
-			}
-			err = db.Batch(func(tx *bolt.Tx) error {
-				allCountriesBucket, txErr := tx.CreateBucketIfNotExists([]byte(CountryCollection))
-				if txErr != nil {
-					return errors.Wrapf(txErr, "error creating %s bucket", CountryCollection)
-				}
-
-				for _, country := range countries {
-					if country.Name == "" {
-						continue
-					}
-
-					countryDoc := documents.FromCountry(*country)
-					backups <- countryDoc
-
-					myCountryBucket, txErr := tx.CreateBucketIfNotExists([]byte(countryDoc.GetName()))
-					if txErr != nil {
-						return errors.Wrapf(txErr, "error creating %s bucket", countryDoc.GetName())
-					}
-					if txErr := allCountriesBucket.Put([]byte(countryDoc.GetName()), []byte(countryDoc.GetName())); txErr != nil {
-						return errors.Wrapf(txErr, "error creating %s record in %s", countryDoc.GetName(), CountryCollection)
-					}
-					docBody, txErr := json.Marshal(countryDoc)
-					if txErr != nil {
-						return errors.Wrap(txErr, "JSON marshal error")
-					}
-					if txErr := myCountryBucket.Put([]byte(countryDoc.GetWhen().Format(time.RFC3339)), docBody); txErr != nil {
-						return errors.Wrapf(txErr, "error creating %s record in %s", countryDoc.GetName(), CountryCollection)
-					}
-				}
-				return nil
-			})
-			if err != nil {
-				errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", CountryCollection)
-			}
-			log.Printf("[INFO] Done scraping countries. Sleeping %s \n", interval)
+			onTicker()
 		}
 	}
 }
@@ -98,51 +82,45 @@ func States(ctx context.Context, interval time.Duration, backups chan<- document
 		panic(errors.New("Could not retrieve error chan from context"))
 	}
 
+	onTicker := func() {
+		log.Println("[DEBUG] Scraping states")
+		rawStates, err := worldometers.States(ctx, httpclient.Retryable())
+		if err != nil {
+			errorChan <- errors.Wrap(err, "error scraping United States values")
+		}
+		statesDocs := []documents.CollectionEntry{}
+		for _, state := range rawStates {
+			if state.Name == "" {
+				continue
+			}
+			stateDoc := documents.FromState(*state)
+			backups <- stateDoc
+			statesDocs = append(statesDocs, *stateDoc)
+		}
+		err = documents.BulkSave(db, StateCollection, statesDocs)
+		if err != nil {
+			errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", StateCollection)
+		}
+		log.Printf("[INFO] Done scraping states. Sleeping %s \n", interval)
+	}
+
+	// force the first run on the app start
+	onTicker()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			log.Println("[DEBUG] Scraping states")
-			states, err := worldometers.States(ctx, httpclient.Retryable())
-			if err != nil {
-				errorChan <- errors.Wrap(err, "error scraping United States values")
-			}
-			err = db.Batch(func(tx *bolt.Tx) error {
-				allStatesBucket, txErr := tx.CreateBucketIfNotExists([]byte(StateCollection))
-				if txErr != nil {
-					return errors.Wrapf(txErr, "error creating %s bucket", StateCollection)
-				}
-
-				for _, state := range states {
-					if state.Name == "" {
-						continue
-					}
-
-					stateDoc := documents.FromState(*state)
-					backups <- stateDoc
-
-					myCountryBucket, txErr := tx.CreateBucketIfNotExists([]byte(stateDoc.GetName()))
-					if txErr != nil {
-						return errors.Wrapf(txErr, "error creating %s bucket", stateDoc.GetName())
-					}
-					if txErr := allStatesBucket.Put([]byte(stateDoc.GetName()), []byte(stateDoc.GetName())); txErr != nil {
-						return errors.Wrapf(txErr, "error creating %s record in %s", stateDoc.GetName(), StateCollection)
-					}
-					docBody, txErr := json.Marshal(stateDoc)
-					if txErr != nil {
-						return errors.Wrap(txErr, "JSON marshal error")
-					}
-					if txErr := myCountryBucket.Put([]byte(stateDoc.GetWhen().Format(time.RFC3339)), docBody); txErr != nil {
-						return errors.Wrapf(txErr, "error creating %s record in %s", stateDoc.GetName(), StateCollection)
-					}
-				}
-				return nil
-			})
-			if err != nil {
-				errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", StateCollection)
-			}
-			log.Printf("[INFO] Done scraping states. Sleeping %s \n", interval)
+			onTicker()
 		}
 	}
+}
+
+func key(doc documents.CollectionEntry) string {
+	name := strings.TrimSpace(doc.GetName())
+	name = strings.ToLower(name)
+	name = strings.ReplaceAll(name, ". ", "_")
+	name = strings.ReplaceAll(name, " ", "_")
+	name = strings.ReplaceAll(name, ".", "_")
+	return name
 }

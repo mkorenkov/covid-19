@@ -3,7 +3,6 @@ module github.com/mkorenkov/covid-19
 go 1.14
 
 require (
-	github.com/HouzuoGuo/tiedot v0.0.0-20200330175510-6fb216206052
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/aws/aws-sdk-go v1.30.24
 	github.com/boltdb/bolt v1.3.1
