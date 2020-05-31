@@ -12,6 +12,7 @@ type Config struct {
 	ScrapeInterval time.Duration     `split_words:"true" default:"59m"`
 	ListenAddr     string            `split_words:"true" default:":8000"`
 	Credentials    map[string]string `split_words:"true" required:"true"` // comma separated user:password pairs
+	SentryDSN      string            `split_words:"true" required:"true"`
 }
 
 // GetBucket returns S3 bucket.

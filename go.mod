@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/aws/aws-sdk-go v1.30.24
 	github.com/boltdb/bolt v1.3.1
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/getsentry/sentry-go v0.6.1
 	github.com/go-pkgz/repeater v1.1.3
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/logutils v1.0.0

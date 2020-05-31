@@ -1,15 +1,20 @@
 FROM golang:1.14 AS build
 WORKDIR /go/src/github.com/mkorenkov/covid-19
 COPY . .
-RUN cd /go/src/github.com/mkorenkov/covid-19 && CGO_ENABLED=0 GO111MODULE=off GOOS=linux go build -o bin/worldometersd cmd/worldometersd/main.go
-
-FROM alpine:latest AS certs
-RUN apk --update add ca-certificates
+RUN cd /go/src/github.com/mkorenkov/covid-19 && CGO_ENABLED=0 GO111MODULE=off GOOS=linux go build -o bin/coviddy cmd/coviddy/main.go
 
 FROM alpine:latest
-ENV STORAGE_DIR="/srv/data/covid-19"
-RUN apk add bind-tools
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=build /go/src/github.com/mkorenkov/covid-19/bin/worldometersd /bin/worldometersd
-VOLUME ["/srv/data/covid-19"]
+ENV STORAGE_DIR="/srv/coviddy"
+# explicitly set user/group IDs
+RUN addgroup -S -g 993 coviddy && \
+    adduser -S -h /srv/coviddy -u 993 -G coviddy coviddy && \
+    apk add --update \
+        bash \
+        bind-tools \
+        ca-certificates \
+        su-exec \
+        tzdata
+COPY --from=build /go/src/github.com/mkorenkov/covid-19/bin/coviddy /bin/coviddy
+VOLUME ["/srv/coviddy"]
+ENTRYPOINT ["su-exec", "coviddy"]
 CMD ["/bin/worldometersd"]
