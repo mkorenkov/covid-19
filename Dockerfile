@@ -17,4 +17,4 @@ RUN addgroup -S -g 993 coviddy && \
 COPY --from=build /go/src/github.com/mkorenkov/covid-19/bin/coviddy /bin/coviddy
 VOLUME ["/srv/coviddy"]
 ENTRYPOINT ["su-exec", "coviddy"]
-CMD ["/bin/worldometersd"]
+CMD ["/bin/coviddy"]
