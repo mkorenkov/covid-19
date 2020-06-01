@@ -8,9 +8,9 @@ type Config struct {
 	S3Region       string            `split_words:"true" default:"us-east-1"`
 	S3Endpoint     string            `split_words:"true"`
 	S3Bucket       string            `split_words:"true" required:"true"`
-	StorageDir     string            `split_words:"true" default:"/srv/data/covid-19"`
-	ScrapeInterval time.Duration     `split_words:"true" default:"59m"`
-	ListenAddr     string            `split_words:"true" default:":8000"`
+	StorageDir     string            `split_words:"true" required:"true"`
+	ScrapeInterval time.Duration     `split_words:"true" required:"true"`
+	ListenAddr     string            `split_words:"true" required:"true"`
 	Credentials    map[string]string `split_words:"true" required:"true"` // comma separated user:password pairs
 	SentryDSN      string            `split_words:"true" required:"true"`
 }

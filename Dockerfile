@@ -4,10 +4,12 @@ COPY . .
 RUN cd /go/src/github.com/mkorenkov/covid-19 && CGO_ENABLED=0 GO111MODULE=off GOOS=linux go build -o bin/coviddy cmd/coviddy/main.go
 
 FROM alpine:latest
-ENV STORAGE_DIR="/srv/coviddy"
+ENV COVID19_STORAGE_DIR="/srv/coviddy"
+ENV COVID19_LISTEN_ADDR=":9898"
+ENV COVID19_SCRAPE_INTERVAL="55m"
 # explicitly set user/group IDs
-RUN addgroup -S -g 993 coviddy && \
-    adduser -S -h /srv/coviddy -u 993 -G coviddy coviddy && \
+RUN addgroup -S -g 998 coviddy && \
+    adduser -S -h /srv/coviddy -u 998 -G coviddy coviddy && \
     apk add --update \
         bash \
         bind-tools \
