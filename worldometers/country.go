@@ -27,7 +27,7 @@ func newCountryFromRecord(data []string) (*Country, error) {
 
 	totalCases, err := parseUint(data[2])
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse total cases")
+		return nil, errors.Wrap(err, "failed to parse total cases")
 	}
 	totalDeaths, err := parseUint(data[4])
 	if err != nil {
@@ -37,7 +37,7 @@ func newCountryFromRecord(data []string) (*Country, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total recoverred")
 	}
-	totalTests, err := parseUint(data[11])
+	totalTests, err := parseFloat(data[11])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total tests")
 	}
@@ -53,9 +53,16 @@ func newCountryFromRecord(data []string) (*Country, error) {
 			return nil, errors.Wrap(err, "failed to parse active cases")
 		}
 	}
-	criticalCases, err := parseUint(data[8])
+	var criticalCases uint64
+	possibleNegativecriticalCases, err := parseInt(data[8])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse critical cases")
+	}
+	if possibleNegativecriticalCases > 0 {
+		criticalCases, err = parseUint(data[8])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse critical cases")
+		}
 	}
 	cases1m, err := parseFloat(data[9])
 	if err != nil {
@@ -79,7 +86,7 @@ func newCountryFromRecord(data []string) (*Country, error) {
 		TotalCases:     totalCases,
 		TotalDeaths:    totalDeaths,
 		TotalRecovered: totalRecovered,
-		TotalTests:     totalTests,
+		TotalTests:     uint64(totalTests),
 		ActiveCases:    activeCases,
 		CriticalCases:  criticalCases,
 		CasesPer1M:     cases1m,
