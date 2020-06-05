@@ -6,7 +6,7 @@ RUN cd /go/src/github.com/mkorenkov/covid-19 && CGO_ENABLED=0 GO111MODULE=off GO
 FROM alpine:latest
 ENV COVID19_STORAGE_DIR="/srv/coviddy"
 ENV COVID19_LISTEN_ADDR=":9898"
-ENV COVID19_SCRAPE_INTERVAL="55m"
+ENV COVID19_SCRAPE_INTERVAL="163m"
 # explicitly set user/group IDs
 RUN addgroup -S -g 998 coviddy && \
     adduser -S -h /srv/coviddy -u 998 -G coviddy coviddy && \
