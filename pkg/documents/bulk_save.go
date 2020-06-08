@@ -77,7 +77,6 @@ func Save(db *bolt.DB, collectionname string, doc CollectionEntry) error {
 		if txErr := docBucket.Put([]byte(doc.GetWhen().Format(time.RFC3339)), docBody); txErr != nil {
 			return errors.Wrapf(txErr, "error creating %s record in %s", doc.GetName(), bucketKey)
 		}
-
 		return nil
 	})
 	return err

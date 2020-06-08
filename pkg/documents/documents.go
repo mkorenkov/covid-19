@@ -22,19 +22,15 @@ type CollectionEntry interface {
 	Save(w io.Writer) error
 }
 
-type StateEntry struct {
-	When time.Time `json:"when"`
-	worldometers.UnitedState
+type DataEntry struct {
+	Name   string    `json:"name"`
+	When   time.Time `json:"when"`
+	Cases  uint64    `json:"total_cases"`
+	Deaths uint64    `json:"total_deaths"`
+	Tests  uint64    `json:"total_tests"`
 }
 
-func FromState(state worldometers.UnitedState) *StateEntry {
-	return &StateEntry{
-		time.Now(),
-		state,
-	}
-}
-
-func (s StateEntry) Save(w io.Writer) error {
+func (s DataEntry) Save(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(s); err != nil {
 		return errors.Wrapf(err, "error json encoding %s", s.GetName())
@@ -42,38 +38,30 @@ func (s StateEntry) Save(w io.Writer) error {
 	return nil
 }
 
-func (s StateEntry) GetWhen() time.Time {
+func (s DataEntry) GetWhen() time.Time {
 	return s.When
 }
 
-func (s StateEntry) GetName() string {
+func (s DataEntry) GetName() string {
 	return s.Name
 }
 
-type CountryEntry struct {
-	When time.Time `json:"when"`
-	worldometers.Country
-}
-
-func FromCountry(country worldometers.Country) *CountryEntry {
-	return &CountryEntry{
-		time.Now(),
-		country,
+func FromState(state worldometers.UnitedState) *DataEntry {
+	return &DataEntry{
+		When:   time.Now(),
+		Name:   state.Name,
+		Cases:  state.TotalCases,
+		Deaths: state.TotalDeaths,
+		Tests:  state.TotalTests,
 	}
 }
 
-func (c CountryEntry) Save(w io.Writer) error {
-	enc := json.NewEncoder(w)
-	if err := enc.Encode(c); err != nil {
-		return errors.Wrapf(err, "error json encoding %s", c.GetName())
+func FromCountry(country worldometers.Country) *DataEntry {
+	return &DataEntry{
+		When:   time.Now(),
+		Name:   country.Name,
+		Cases:  country.TotalCases,
+		Deaths: country.TotalDeaths,
+		Tests:  country.TotalTests,
 	}
-	return nil
-}
-
-func (c CountryEntry) GetWhen() time.Time {
-	return c.When
-}
-
-func (c CountryEntry) GetName() string {
-	return c.Name
 }

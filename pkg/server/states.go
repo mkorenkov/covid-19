@@ -23,10 +23,7 @@ func ListStatesHandler(w http.ResponseWriter, r *http.Request) {
 
 	res := []string{}
 	err := db.View(func(tx *bolt.Tx) error {
-		masterCollectionBucket, txErr := tx.CreateBucketIfNotExists([]byte(documents.StateCollection))
-		if txErr != nil {
-			return errors.Wrapf(txErr, "error creating %s bucket", documents.StateCollection)
-		}
+		masterCollectionBucket := tx.Bucket([]byte(documents.StateCollection))
 		c := masterCollectionBucket.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
@@ -46,7 +43,7 @@ func UpsertStatesHandler(w http.ResponseWriter, r *http.Request) {
 	if db == nil {
 		panic(errors.New("Could not retrieve DB from context"))
 	}
-	m := documents.StateEntry{}
+	m := documents.DataEntry{}
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&m); err != nil {
 		panic(err)
@@ -72,15 +69,15 @@ func StateDatapointsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := map[string]documents.StateEntry{}
+	res := map[string]documents.DataEntry{}
 
 	min := r.URL.Query().Get(beforeParam)
 	if min == "" {
-		min = time.Time{}.Format(time.RFC3339)
+		min = time.Time{}.In(time.Local).Format(time.RFC3339)
 	}
 	max := r.URL.Query().Get(afterParam)
-	if min == "" {
-		min = time.Now().Format(time.RFC3339)
+	if max == "" {
+		max = time.Now().Format(time.RFC3339)
 	}
 
 	err := db.View(func(tx *bolt.Tx) error {
@@ -92,7 +89,7 @@ func StateDatapointsHandler(w http.ResponseWriter, r *http.Request) {
 
 		c := bucket.Cursor()
 		for k, v := c.Seek([]byte(min)); k != nil && bytes.Compare(k, []byte(max)) <= 0; k, v = c.Next() {
-			m := documents.StateEntry{}
+			m := documents.DataEntry{}
 			if jsonErr := json.Unmarshal(v, &m); jsonErr != nil {
 				return errors.Wrap(jsonErr, "error decoding json from DB")
 			}
@@ -104,6 +101,7 @@ func StateDatapointsHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
 	if err = enc.Encode(res); err != nil {
 		panic(err)
 	}

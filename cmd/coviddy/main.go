@@ -22,7 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const dbName = "covid19.db"
+const dbName = "coviddy.db"
 
 func init() {
 	filter := &logutils.LevelFilter{
@@ -46,7 +46,7 @@ func ensureExists(dirName string) error {
 
 func main() {
 	var cfg config.Config
-	if err := envconfig.Process("covid19", &cfg); err != nil {
+	if err := envconfig.Process("coviddy", &cfg); err != nil {
 		log.Fatal(err)
 	}
 	if err := ensureExists(cfg.StorageDir); err != nil {
