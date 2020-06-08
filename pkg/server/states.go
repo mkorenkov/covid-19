@@ -2,15 +2,60 @@ package server
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/mux"
+	"github.com/mkorenkov/covid-19/pkg/documents"
 	"github.com/mkorenkov/covid-19/pkg/requestcontext"
+	"github.com/pkg/errors"
 )
+
+// ListStatesHandler prints per country data.
+func ListStatesHandler(w http.ResponseWriter, r *http.Request) {
+	db := requestcontext.DB(r.Context())
+	if db == nil {
+		panic(errors.New("Could not retrieve DB from context"))
+	}
+
+	res := []string{}
+	err := db.View(func(tx *bolt.Tx) error {
+		masterCollectionBucket, txErr := tx.CreateBucketIfNotExists([]byte(documents.StateCollection))
+		if txErr != nil {
+			return errors.Wrapf(txErr, "error creating %s bucket", documents.StateCollection)
+		}
+		c := masterCollectionBucket.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			res = append(res, string(v))
+		}
+		return nil
+	})
+	enc := json.NewEncoder(w)
+	if err = enc.Encode(res); err != nil {
+		panic(err)
+	}
+}
+
+// UpsertStatesHandler adds country to the DB.
+func UpsertStatesHandler(w http.ResponseWriter, r *http.Request) {
+	db := requestcontext.DB(r.Context())
+	if db == nil {
+		panic(errors.New("Could not retrieve DB from context"))
+	}
+	m := documents.StateEntry{}
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&m); err != nil {
+		panic(err)
+	}
+	if err := documents.Save(db, documents.StateCollection, m); err != nil {
+		panic(err)
+	}
+	w.WriteHeader(http.StatusCreated)
+}
 
 // StateDatapointsHandler prints per state data.
 func StateDatapointsHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,8 +72,16 @@ func StateDatapointsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := map[string]documents.StateEntry{}
+
 	min := r.URL.Query().Get(beforeParam)
+	if min == "" {
+		min = time.Time{}.Format(time.RFC3339)
+	}
 	max := r.URL.Query().Get(afterParam)
+	if min == "" {
+		min = time.Now().Format(time.RFC3339)
+	}
 
 	err := db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(strings.ToLower(state)))
@@ -39,11 +92,19 @@ func StateDatapointsHandler(w http.ResponseWriter, r *http.Request) {
 
 		c := bucket.Cursor()
 		for k, v := c.Seek([]byte(min)); k != nil && bytes.Compare(k, []byte(max)) <= 0; k, v = c.Next() {
-			fmt.Fprintf(w, "%v,", v)
+			m := documents.StateEntry{}
+			if jsonErr := json.Unmarshal(v, &m); jsonErr != nil {
+				return errors.Wrap(jsonErr, "error decoding json from DB")
+			}
+			res[string(k)] = m
 		}
 		return nil
 	})
 	if err != nil {
+		panic(err)
+	}
+	enc := json.NewEncoder(w)
+	if err = enc.Encode(res); err != nil {
 		panic(err)
 	}
 }

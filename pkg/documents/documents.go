@@ -9,6 +9,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	// StateCollection name of the states collection
+	StateCollection = "States"
+	// CountryCollection name of the countries collection
+	CountryCollection = "Countries"
+)
+
 type CollectionEntry interface {
 	GetWhen() time.Time
 	GetName() string

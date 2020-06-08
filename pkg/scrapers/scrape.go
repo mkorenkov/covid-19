@@ -13,13 +13,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	// StateCollection name of the states collection
-	StateCollection = "States"
-	// CountryCollection name of the countries collection
-	CountryCollection = "Countries"
-)
-
 // Countries scrapes countries over some interval.
 func Countries(ctx context.Context, interval time.Duration, backups chan<- documents.CollectionEntry) {
 	ticker := time.NewTicker(interval)
@@ -49,9 +42,9 @@ func Countries(ctx context.Context, interval time.Duration, backups chan<- docum
 			backups <- countryDoc
 			countryDocs = append(countryDocs, *countryDoc)
 		}
-		err = documents.BulkSave(db, CountryCollection, countryDocs)
+		err = documents.BulkSave(db, documents.CountryCollection, countryDocs)
 		if err != nil {
-			errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", CountryCollection)
+			errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", documents.CountryCollection)
 		}
 		log.Printf("[INFO] Done scraping countries. Sleeping %s \n", interval)
 	}
@@ -97,9 +90,9 @@ func States(ctx context.Context, interval time.Duration, backups chan<- document
 			backups <- stateDoc
 			statesDocs = append(statesDocs, *stateDoc)
 		}
-		err = documents.BulkSave(db, StateCollection, statesDocs)
+		err = documents.BulkSave(db, documents.StateCollection, statesDocs)
 		if err != nil {
-			errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", StateCollection)
+			errorChan <- errors.Wrapf(err, "Error while writing %s data to DB", documents.StateCollection)
 		}
 		log.Printf("[INFO] Done scraping states. Sleeping %s \n", interval)
 	}

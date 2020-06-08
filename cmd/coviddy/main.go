@@ -80,13 +80,13 @@ func main() {
 	r.HandleFunc("/", server.HomeHandler)
 
 	internal := r.PathPrefix("/api/internal/v1/").Subrouter()
-	internal.HandleFunc("/countries", server.HomeHandler).Methods("POST")
-	internal.HandleFunc("/states", server.HomeHandler).Methods("POST")
+	internal.HandleFunc("/countries", server.UpsertCountriesHandler).Methods("POST")
+	internal.HandleFunc("/states", server.UpsertStatesHandler).Methods("POST")
 	internal.Use(b.BasicAuth)
 
 	api := r.PathPrefix("/api/v1/").Subrouter()
-	api.HandleFunc("/countries", server.HomeHandler).Methods("GET")
-	api.HandleFunc("/states", server.HomeHandler).Methods("GET")
+	api.HandleFunc("/countries", server.ListCountriesHandler).Methods("GET")
+	api.HandleFunc("/states", server.ListStatesHandler).Methods("GET")
 	api.HandleFunc("/countries/{country}", server.CountryDatapointsHandler).Methods("GET")
 	api.HandleFunc("/states/{state}", server.StateDatapointsHandler).Methods("GET")
 
