@@ -41,5 +41,5 @@ export COVIDDY_CREDENTIALS="user1:password1,user2:password2"
 # location for the boltdb storage dir
 export COVIDDY_STORAGE_DIR="/tmp/data/covid-19"
 
-go run cmd/worldometersd/main.go
+go run cmd/coviddy/main.go
 ```
