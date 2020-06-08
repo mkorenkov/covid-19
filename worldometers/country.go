@@ -37,46 +37,46 @@ func newCountryFromRecord(data []string) (*Country, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total recoverred")
 	}
-	totalTests, err := parseFloat(data[11])
+	totalTests, err := parseFloat(data[12])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse total tests")
 	}
 	var activeCases uint64
 	// https://github.com/mkorenkov/covid-19/issues/1
-	possibleNegativeActiveCases, err := parseInt(data[7])
+	possibleNegativeActiveCases, err := parseInt(data[8])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse active cases")
 	}
 	if possibleNegativeActiveCases > 0 {
-		activeCases, err = parseUint(data[7])
+		activeCases, err = parseUint(data[8])
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse active cases")
 		}
 	}
 	var criticalCases uint64
-	possibleNegativecriticalCases, err := parseInt(data[8])
+	possibleNegativecriticalCases, err := parseInt(data[9])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse critical cases")
 	}
 	if possibleNegativecriticalCases > 0 {
-		criticalCases, err = parseUint(data[8])
+		criticalCases, err = parseUint(data[9])
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse critical cases")
 		}
 	}
-	cases1m, err := parseFloat(data[9])
+	cases1m, err := parseFloat(data[13])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse cases per 1M")
 	}
-	deaths1m, err := parseFloat(data[10])
+	deaths1m, err := parseFloat(data[11])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse deaths per 1M")
 	}
-	tests1m, err := parseFloat(data[12])
+	tests1m, err := parseFloat(data[10])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse tests per 1M")
 	}
-	population, err := parseUint(data[13])
+	population, err := parseUint(data[14])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse population")
 	}
@@ -93,6 +93,6 @@ func newCountryFromRecord(data []string) (*Country, error) {
 		DeathsPer1M:    deaths1m,
 		TestsPer1M:     tests1m,
 		Population:     population,
-		Region:         data[14],
+		Region:         data[15],
 	}, nil
 }

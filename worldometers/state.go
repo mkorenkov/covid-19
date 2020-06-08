@@ -1,6 +1,8 @@
 package worldometers
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 // UnitedState single row from worldometers
 type UnitedState struct {

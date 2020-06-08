@@ -1,6 +1,7 @@
 package worldometers
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,35 +9,19 @@ import (
 )
 
 func TestUSA(t *testing.T) {
-	input := []string{
-		"1",
-		"USA",
-		"1,484,285",
-		"",
-		"88,507",
-		"",
-		"327,751",
-		"1,068,027",
-		"16,139",
-		"4,488",
-		"268",
-		"11,090,900",
-		"33,532",
-		"330,758,784",
-		"North America",
-	}
-	res, err := newCountryFromRecord(input)
+	input := `1;USA;2,007,449;;112,469;;761,708;;1,133,272;16,923;6,067;340;21,291,677;64,349;330,880,530;North America;165;2,942;16`
+	res, err := newCountryFromRecord(strings.Split(input, ";"))
 	require.Nil(t, err)
 	assert.Equal(t, "USA", res.Name)
-	assert.Equal(t, uint64(1484285), res.TotalCases)
-	assert.Equal(t, uint64(88507), res.TotalDeaths)
-	assert.Equal(t, uint64(327751), res.TotalRecovered)
-	assert.Equal(t, uint64(1068027), res.ActiveCases)
-	assert.Equal(t, uint64(16139), res.CriticalCases)
-	assert.Equal(t, float64(4488), res.CasesPer1M)
-	assert.Equal(t, float64(268), res.DeathsPer1M)
-	assert.Equal(t, uint64(11090900), res.TotalTests)
-	assert.Equal(t, float64(33532), res.TestsPer1M)
-	assert.Equal(t, uint64(330758784), res.Population)
-	assert.Equal(t, "North America", res.Region)
+	assert.Equal(t, uint64(2007449), res.TotalCases, "total cases")
+	assert.Equal(t, uint64(112469), res.TotalDeaths, "total deaths")
+	assert.Equal(t, uint64(761708), res.TotalRecovered, "total recovered")
+	assert.Equal(t, uint64(1133272), res.ActiveCases, "active cases")
+	assert.Equal(t, uint64(16923), res.CriticalCases, "critical cases")
+	assert.Equal(t, float64(64349), res.CasesPer1M, "cases per 1M")
+	assert.Equal(t, float64(340), res.DeathsPer1M, "deaths per 1M")
+	assert.Equal(t, uint64(21291677), res.TotalTests, "total tests")
+	assert.Equal(t, float64(6067), res.TestsPer1M, "tests per 1M")
+	assert.Equal(t, uint64(330880530), res.Population, "population")
+	assert.Equal(t, "North America", res.Region, "region")
 }
