@@ -5,19 +5,22 @@ import (
 	"net/http"
 
 	"github.com/boltdb/bolt"
+	"github.com/mkorenkov/covid-19/pkg/config"
 )
 
 type ctxKey struct{}
 
 // RequestContext holds DB connection and stuff
 type RequestContext struct {
+	Config config.Config
 	DB     *bolt.DB
 	Errors chan error
 }
 
 // New initializes a new RequestContext.
-func New(db *bolt.DB, errorChan chan error) *RequestContext {
+func New(cfg config.Config, db *bolt.DB, errorChan chan error) *RequestContext {
 	return &RequestContext{
+		Config: cfg,
 		DB:     db,
 		Errors: errorChan,
 	}

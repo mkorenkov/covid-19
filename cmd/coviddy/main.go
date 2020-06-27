@@ -52,21 +52,30 @@ func main() {
 	if err := ensureExists(cfg.StorageDir); err != nil {
 		log.Fatal(err)
 	}
+	if err := ensureExists(cfg.ImportsDir()); err != nil {
+		log.Fatal(err)
+	}
+	if err := reporter.Initialize(cfg.SentryDSN); err != nil {
+		log.Fatal(err)
+	}
 
 	myDB, err := bolt.Open(path.Join(cfg.StorageDir, dbName), 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err = reporter.Initialize(cfg.SentryDSN); err != nil {
-		log.Fatal(err)
-	}
+	defer func() {
+		cErr := myDB.Close()
+		if cErr != nil {
+			reporter.Report(cErr)
+		}
+	}()
 
 	backupChan := make(chan documents.CollectionEntry)
 	defer close(backupChan)
 	errorsChan := make(chan error)
 	defer close(errorsChan)
 
-	rctx := requestcontext.New(myDB, errorsChan)
+	rctx := requestcontext.New(cfg, myDB, errorsChan)
 	ctx := requestcontext.WithContext(context.Background(), rctx)
 
 	go reporter.ErrorReportingRoutine(errorsChan)
@@ -82,6 +91,7 @@ func main() {
 	internal := r.PathPrefix("/api/internal/v1/").Subrouter()
 	internal.HandleFunc("/countries", server.UpsertCountriesHandler).Methods("POST")
 	internal.HandleFunc("/states", server.UpsertStatesHandler).Methods("POST")
+	internal.HandleFunc("/boltdb/import", server.BoltDBImportHandler).Methods("POST")
 	internal.Use(b.BasicAuth)
 
 	api := r.PathPrefix("/api/v1/").Subrouter()
@@ -95,8 +105,8 @@ func main() {
 	srv := &http.Server{
 		Handler:      server.PanicRecoveryMiddleware(server.LogMiddleware(requestcontext.InjectRequestContextMiddleware(r, rctx))),
 		Addr:         cfg.ListenAddr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 1 * time.Minute,
+		ReadTimeout:  1 * time.Minute,
 	}
 	log.Fatal(srv.ListenAndServe())
 }

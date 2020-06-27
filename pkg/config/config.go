@@ -1,6 +1,9 @@
 package config
 
-import "time"
+import (
+	"path"
+	"time"
+)
 
 type Config struct {
 	S3Secret       string            `split_words:"true" required:"true"`
@@ -13,6 +16,11 @@ type Config struct {
 	ListenAddr     string            `split_words:"true" required:"true"`
 	Credentials    map[string]string `split_words:"true" required:"true"` // comma separated user:password pairs
 	SentryDSN      string            `split_words:"true" required:"true"`
+}
+
+// ImportsDir where to store the imports.
+func (c Config) ImportsDir() string {
+	return path.Join(c.StorageDir, "imports")
 }
 
 // GetBucket returns S3 bucket.
