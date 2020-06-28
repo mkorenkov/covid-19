@@ -91,6 +91,7 @@ func main() {
 	internal := r.PathPrefix("/api/internal/v1/").Subrouter()
 	internal.HandleFunc("/countries", server.UpsertCountriesHandler).Methods("POST")
 	internal.HandleFunc("/states", server.UpsertStatesHandler).Methods("POST")
+	internal.HandleFunc("/import", server.BoltDBImportHandler).Methods("POST")
 	internal.HandleFunc("/boltdb/import", server.BoltDBImportHandler).Methods("POST")
 	internal.Use(b.BasicAuth)
 

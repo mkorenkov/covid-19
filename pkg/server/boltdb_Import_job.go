@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"os"
 	"sync"
@@ -25,36 +24,6 @@ func (e sentinelError) Error() string {
 
 const ImportCancelledError = sentinelError("Context has been cancelled during import")
 
-// due to data structure changes, a few weeks worths of data have
-// "total_tests" stored in "tests_per_1m" json field. Important to note,
-// "region" filed contains "population" of the country.
-type legacyCountryData struct {
-	Name          string    `json:"name"`
-	When          time.Time `json:"when"`
-	Cases         uint64    `json:"total_cases"`
-	Deaths        uint64    `json:"total_deaths"`
-	Tests         uint64    `json:"total_tests"`
-	PossibleTests uint64    `json:"tests_per_1m"`
-}
-
-func parseCountry(payload []byte) (documents.DataEntry, error) {
-	var res documents.DataEntry
-	legacyCountryEntry := legacyCountryData{}
-	if legacyParseErr := json.Unmarshal(payload, &legacyCountryEntry); legacyParseErr == nil && legacyCountryEntry.PossibleTests > legacyCountryEntry.Tests {
-		return documents.DataEntry{
-			Name:   legacyCountryEntry.Name,
-			When:   legacyCountryEntry.When,
-			Cases:  legacyCountryEntry.Cases,
-			Deaths: legacyCountryEntry.Deaths,
-			Tests:  legacyCountryEntry.PossibleTests,
-		}, nil
-	}
-	if jsonErr := json.Unmarshal(payload, &res); jsonErr != nil {
-		return res, errors.Wrap(jsonErr, "error decoding json from DB")
-	}
-	return res, nil
-}
-
 type importPayload struct {
 	DataItem   documents.DataEntry
 	Collection string
@@ -74,9 +43,9 @@ func readStates(ctx context.Context, wg *sync.WaitGroup, importDB *bolt.DB, data
 
 			c := bucket.Cursor()
 			for key, payload := c.First(); key != nil; key, payload = c.Next() {
-				dataEntry := documents.DataEntry{}
-				if jsonErr := json.Unmarshal(payload, &dataEntry); jsonErr != nil {
-					return errors.Wrap(jsonErr, "error decoding json from DB")
+				dataEntry, parseErr := documents.Parse(payload)
+				if parseErr != nil {
+					return errors.Wrap(parseErr, "error decoding state data")
 				}
 				select {
 				case <-ctx.Done():
@@ -107,7 +76,7 @@ func readCountries(ctx context.Context, wg *sync.WaitGroup, importDB *bolt.DB, d
 
 			c := bucket.Cursor()
 			for key, payload := c.First(); key != nil; key, payload = c.Next() {
-				dataEntry, parseErr := parseCountry(payload)
+				dataEntry, parseErr := documents.Parse(payload)
 				if parseErr != nil {
 					return errors.Wrap(parseErr, "error decoding country data")
 				}

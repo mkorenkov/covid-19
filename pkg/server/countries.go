@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -54,12 +55,19 @@ func UpsertCountriesHandler(w http.ResponseWriter, r *http.Request) {
 	if db == nil {
 		panic(errors.New("Could not retrieve DB from context"))
 	}
-	m := documents.DataEntry{}
-	dec := json.NewDecoder(r.Body)
-	if err := dec.Decode(&m); err != nil {
-		panic(err)
+	payload, readErr := ioutil.ReadAll(r.Body)
+	if readErr != nil {
+		panic(errors.Wrap(readErr, "Error reading request body"))
 	}
-	if err := documents.Save(db, documents.CountryCollection, m); err != nil {
+	dataEntry, parseErr := documents.Parse(payload)
+	if parseErr != nil {
+		if errors.Is(parseErr, documents.BucketNotFoundError) {
+			http.Error(w, parseErr.Error(), http.StatusFailedDependency)
+			w.WriteHeader(http.StatusCreated)
+		}
+		panic(parseErr)
+	}
+	if err := documents.Save(db, documents.CountryCollection, dataEntry); err != nil {
 		panic(err)
 	}
 	w.WriteHeader(http.StatusCreated)
