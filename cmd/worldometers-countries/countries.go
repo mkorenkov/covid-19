@@ -13,5 +13,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(countries["USA"])
+	log.Println(countries["Ukraine"])
 }

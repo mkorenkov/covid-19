@@ -21,3 +21,17 @@ func TestNY(t *testing.T) {
 	assert.Equal(t, uint64(2497842), res.TotalTests)
 	assert.Equal(t, float64(128400), res.TestsPer1M)
 }
+
+func TestCalifornia(t *testing.T) {
+	input := `California;230,891;;6,081;;161,148;5,844;154;4,168,509;105,499;[;[`
+	res, err := newStateFromRecord(strings.Split(input, ";"))
+	require.Nil(t, err)
+	assert.Equal(t, "California", res.Name)
+	assert.Equal(t, 230891, int(res.TotalCases))
+	assert.Equal(t, 6081, int(res.TotalDeaths))
+	assert.Equal(t, 161148, int(res.ActiveCases))
+	assert.Equal(t, 5844, int(res.CasesPer1M))
+	assert.Equal(t, 154, int(res.DeathsPer1M))
+	assert.Equal(t, 4168509, int(res.TotalTests))
+	assert.Equal(t, 105499, int(res.TestsPer1M))
+}

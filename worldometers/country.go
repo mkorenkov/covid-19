@@ -64,7 +64,7 @@ func newCountryFromRecord(data []string) (*Country, error) {
 			return nil, errors.Wrap(err, "failed to parse critical cases")
 		}
 	}
-	cases1m, err := parseFloat(data[13])
+	cases1m, err := parseFloat(data[10])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse cases per 1M")
 	}
@@ -72,7 +72,7 @@ func newCountryFromRecord(data []string) (*Country, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse deaths per 1M")
 	}
-	tests1m, err := parseFloat(data[10])
+	tests1m, err := parseFloat(data[13])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse tests per 1M")
 	}
