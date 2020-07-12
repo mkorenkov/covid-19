@@ -6,23 +6,26 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/mkorenkov/covid-19/pkg/config"
+	"github.com/mkorenkov/covid-19/pkg/documents"
 )
 
 type ctxKey struct{}
 
 // RequestContext holds DB connection and stuff
 type RequestContext struct {
-	Config config.Config
-	DB     *bolt.DB
-	Errors chan error
+	Config   config.Config
+	DB       *bolt.DB
+	Errors   chan error
+	UploadS3 chan documents.CollectionEntry
 }
 
 // New initializes a new RequestContext.
-func New(cfg config.Config, db *bolt.DB, errorChan chan error) *RequestContext {
+func New(cfg config.Config, db *bolt.DB, errorChan chan error, s3backup chan documents.CollectionEntry) *RequestContext {
 	return &RequestContext{
-		Config: cfg,
-		DB:     db,
-		Errors: errorChan,
+		Config:   cfg,
+		DB:       db,
+		Errors:   errorChan,
+		UploadS3: s3backup,
 	}
 }
 
@@ -51,6 +54,14 @@ func DB(ctx context.Context) *bolt.DB {
 func Errors(ctx context.Context) chan error {
 	if r := GetRequestContext(ctx); r != nil {
 		return r.Errors
+	}
+	return nil
+}
+
+// ToS3 returns documents.CollectionEntry to upload payloads to S3
+func ToS3(ctx context.Context) chan documents.CollectionEntry {
+	if r := GetRequestContext(ctx); r != nil {
+		return r.UploadS3
 	}
 	return nil
 }

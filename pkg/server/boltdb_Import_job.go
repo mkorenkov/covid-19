@@ -25,7 +25,7 @@ func (e sentinelError) Error() string {
 const ImportCancelledError = sentinelError("Context has been cancelled during import")
 
 type importPayload struct {
-	DataItem   documents.DataEntry
+	DataItem   documents.CollectionEntry
 	Collection string
 }
 

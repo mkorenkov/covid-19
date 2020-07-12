@@ -22,7 +22,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const dbName = "coviddy.db"
+const (
+	dbName         = "coviddy.db"
+	backupChanSize = 512
+)
 
 func init() {
 	filter := &logutils.LevelFilter{
@@ -70,12 +73,12 @@ func main() {
 		}
 	}()
 
-	backupChan := make(chan documents.CollectionEntry)
+	backupChan := make(chan documents.CollectionEntry, backupChanSize)
 	defer close(backupChan)
 	errorsChan := make(chan error)
 	defer close(errorsChan)
 
-	rctx := requestcontext.New(cfg, myDB, errorsChan)
+	rctx := requestcontext.New(cfg, myDB, errorsChan, backupChan)
 	ctx := requestcontext.WithContext(context.Background(), rctx)
 
 	go reporter.ErrorReportingRoutine(errorsChan)
@@ -89,9 +92,9 @@ func main() {
 	r.HandleFunc("/", server.HomeHandler)
 
 	internal := r.PathPrefix("/api/internal/v1/").Subrouter()
-	internal.HandleFunc("/countries", server.UpsertCountriesHandler).Methods("POST")
-	internal.HandleFunc("/states", server.UpsertStatesHandler).Methods("POST")
-	internal.HandleFunc("/import", server.BoltDBImportHandler).Methods("POST")
+	internal.HandleFunc("/countries", server.UpsertAnythingHandler).Methods("POST")
+	internal.HandleFunc("/states", server.UpsertAnythingHandler).Methods("POST")
+	internal.HandleFunc("/import/country_or_state", server.UpsertAnythingHandler).Methods("POST")
 	internal.HandleFunc("/boltdb/import", server.BoltDBImportHandler).Methods("POST")
 	internal.Use(b.BasicAuth)
 

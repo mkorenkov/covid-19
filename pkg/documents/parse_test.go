@@ -29,11 +29,15 @@ func TestParseCountriesAndStates(t *testing.T) {
 		res, err := Parse([]byte(testCase.data))
 		require.NoError(t, err)
 		require.NotNil(t, res)
-		assert.True(t, res.When.After(time.Date(2020, 01, 01, 01, 01, 01, 01, time.Now().Location())))
-		assert.Equal(t, testCase.name, res.Name)
-		assert.Equal(t, testCase.cases, int(res.Cases))
-		assert.Equal(t, testCase.deaths, int(res.Deaths))
-		assert.Equal(t, testCase.tests, int(res.Tests))
+
+		asDataItem, ok := res.(DataEntry)
+		require.True(t, ok)
+
+		assert.True(t, asDataItem.When.After(time.Date(2020, 01, 01, 01, 01, 01, 01, time.Now().Location())))
+		assert.Equal(t, testCase.name, asDataItem.Name)
+		assert.Equal(t, testCase.cases, int(asDataItem.Cases))
+		assert.Equal(t, testCase.deaths, int(asDataItem.Deaths))
+		assert.Equal(t, testCase.tests, int(asDataItem.Tests))
 	}
 }
 

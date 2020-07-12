@@ -56,7 +56,7 @@ func parse(payload []byte) (DataEntry, error) {
 }
 
 // Parse parses country / state data from JSON
-func Parse(payload []byte) (DataEntry, error) {
+func Parse(payload []byte) (CollectionEntry, error) {
 	res, err := parse(payload)
 	if err != nil {
 		return res, err

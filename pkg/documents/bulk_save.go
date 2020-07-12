@@ -27,6 +27,7 @@ func key(doc CollectionEntry) string {
 	return name
 }
 
+// BulkSave optionally creates bucket if it does not exists and saves entries to it.
 func BulkSave(db *bolt.DB, collectionname string, docs []CollectionEntry) error {
 	err := db.Batch(func(tx *bolt.Tx) error {
 		masterCollectionBucket, txErr := tx.CreateBucketIfNotExists([]byte(collectionname))
@@ -60,6 +61,7 @@ func BulkSave(db *bolt.DB, collectionname string, docs []CollectionEntry) error 
 	return err
 }
 
+// Save optionally creates bucket if it does not exists and saves entry to it.
 func Save(db *bolt.DB, collectionname string, doc CollectionEntry) error {
 	err := db.Batch(func(tx *bolt.Tx) error {
 		masterCollectionBucket, txErr := tx.CreateBucketIfNotExists([]byte(collectionname))
@@ -91,6 +93,7 @@ func Save(db *bolt.DB, collectionname string, doc CollectionEntry) error {
 	return err
 }
 
+// FindBucketAndSave does not create bucket if that does not exist. Saves the entry to the given bucket if it does.
 func FindBucketAndSave(db *bolt.DB, doc CollectionEntry) error {
 	err := db.Batch(func(tx *bolt.Tx) error {
 		if doc.GetName() == "" {

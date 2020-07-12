@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -47,30 +46,6 @@ func ListCountriesHandler(w http.ResponseWriter, r *http.Request) {
 	if err = enc.Encode(res); err != nil {
 		panic(err)
 	}
-}
-
-// UpsertCountriesHandler adds country to the DB.
-func UpsertCountriesHandler(w http.ResponseWriter, r *http.Request) {
-	db := requestcontext.DB(r.Context())
-	if db == nil {
-		panic(errors.New("Could not retrieve DB from context"))
-	}
-	payload, readErr := ioutil.ReadAll(r.Body)
-	if readErr != nil {
-		panic(errors.Wrap(readErr, "Error reading request body"))
-	}
-	dataEntry, parseErr := documents.Parse(payload)
-	if parseErr != nil {
-		if errors.Is(parseErr, documents.BucketNotFoundError) {
-			http.Error(w, parseErr.Error(), http.StatusFailedDependency)
-			w.WriteHeader(http.StatusCreated)
-		}
-		panic(parseErr)
-	}
-	if err := documents.Save(db, documents.CountryCollection, dataEntry); err != nil {
-		panic(err)
-	}
-	w.WriteHeader(http.StatusCreated)
 }
 
 // CountryDatapointsHandler prints per country data.
