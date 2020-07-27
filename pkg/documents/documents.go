@@ -2,6 +2,7 @@ package documents
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"time"
 
@@ -44,6 +45,10 @@ func (s DataEntry) GetWhen() time.Time {
 
 func (s DataEntry) GetName() string {
 	return s.Name
+}
+
+func (s DataEntry) String() string {
+	return fmt.Sprintf("%s %s[cases=%d tests=%d deaths=%d]", s.When.Format(time.RFC3339), s.Name, s.Cases, s.Tests, s.Deaths)
 }
 
 func FromState(state worldometers.UnitedState) *DataEntry {

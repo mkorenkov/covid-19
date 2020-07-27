@@ -117,7 +117,10 @@ func ToS3(ctx context.Context, config S3Config, docs <-chan documents.Collection
 		select {
 		case <-ctx.Done():
 			return
-		case doc := <-docs:
+		case doc, more := <-docs:
+			if !more {
+				return
+			}
 			if err := Upload(ctx, s3Client, config.GetBucket(), doc); err != nil {
 				errorChan <- errors.Wrap(err, "Failed writing to S3")
 			}

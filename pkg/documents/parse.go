@@ -27,7 +27,8 @@ type legacyCountryData struct {
 	PossibleTests  uint64    `json:"tests_per_1m"`  // except for corrupted entries: make sure to ignore when importing from https://github.com/edoc-hcraes/covid-19-data
 }
 
-func parse(payload []byte) (DataEntry, error) {
+// NoValidationsParse does not perform validations. Use Parse instead
+func NoValidationsParse(payload []byte) (DataEntry, error) {
 	var res DataEntry
 	legacyCountryEntry := legacyCountryData{}
 	if legacyParseErr := json.Unmarshal(payload, &legacyCountryEntry); legacyParseErr == nil {
@@ -57,7 +58,7 @@ func parse(payload []byte) (DataEntry, error) {
 
 // Parse parses country / state data from JSON
 func Parse(payload []byte) (CollectionEntry, error) {
-	res, err := parse(payload)
+	res, err := NoValidationsParse(payload)
 	if err != nil {
 		return res, err
 	}
