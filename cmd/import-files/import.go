@@ -139,7 +139,6 @@ func process(ctx context.Context, cfg Config, docs <-chan documents.CollectionEn
 					errorChan <- errors.Wrapf(err, "Failed to upload %s", doc)
 				}
 				log.Printf("[INFO] %s\n", doc)
-				return
 			}
 		}
 	}
