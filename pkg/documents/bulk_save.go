@@ -52,7 +52,7 @@ func BulkSave(db *bolt.DB, collectionname string, docs []CollectionEntry) error 
 			if txErr != nil {
 				return errors.Wrap(txErr, "JSON marshal error")
 			}
-			if txErr := docBucket.Put([]byte(doc.GetWhen().Format(time.RFC3339)), docBody); txErr != nil {
+			if txErr := docBucket.Put([]byte(doc.GetWhen().UTC().Format(time.RFC3339)), docBody); txErr != nil {
 				return errors.Wrapf(txErr, "error creating %s record in %s", doc.GetName(), bucketKey)
 			}
 		}
@@ -85,7 +85,7 @@ func Save(db *bolt.DB, collectionname string, doc CollectionEntry) error {
 		if txErr != nil {
 			return errors.Wrap(txErr, "JSON marshal error")
 		}
-		if txErr := docBucket.Put([]byte(doc.GetWhen().Format(time.RFC3339)), docBody); txErr != nil {
+		if txErr := docBucket.Put([]byte(doc.GetWhen().UTC().Format(time.RFC3339)), docBody); txErr != nil {
 			return errors.Wrapf(txErr, "error creating %s record in %s", doc.GetName(), bucketKey)
 		}
 		return nil
@@ -109,7 +109,7 @@ func FindBucketAndSave(db *bolt.DB, doc CollectionEntry) error {
 		if txErr != nil {
 			return errors.Wrap(txErr, "JSON marshal error")
 		}
-		if txErr := docBucket.Put([]byte(doc.GetWhen().Format(time.RFC3339)), docBody); txErr != nil {
+		if txErr := docBucket.Put([]byte(doc.GetWhen().UTC().Format(time.RFC3339)), docBody); txErr != nil {
 			return errors.Wrapf(txErr, "error creating %s record in %s", doc.GetName(), bucketKey)
 		}
 		return nil

@@ -40,7 +40,7 @@ func (s DataEntry) Save(w io.Writer) error {
 }
 
 func (s DataEntry) GetWhen() time.Time {
-	return s.When
+	return s.When.UTC()
 }
 
 func (s DataEntry) GetName() string {

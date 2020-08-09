@@ -62,7 +62,7 @@ func parse(dateOverride time.Time, path string) (documents.CollectionEntry, erro
 	if err != nil {
 		return nil, errors.Wrapf(err, "error parsing file %s", path)
 	}
-	doc.When = dateOverride
+	doc.When = dateOverride.UTC()
 	return doc, nil
 }
 
@@ -139,6 +139,7 @@ func process(ctx context.Context, cfg Config, docs <-chan documents.CollectionEn
 					errorChan <- errors.Wrapf(err, "Failed to upload %s", doc)
 				}
 				log.Printf("[INFO] %s\n", doc)
+				return
 			}
 		}
 	}
