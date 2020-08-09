@@ -138,6 +138,7 @@ func process(ctx context.Context, cfg Config, docs <-chan documents.CollectionEn
 				if err := r(cfg, http.DefaultClient, doc); err != nil {
 					errorChan <- errors.Wrapf(err, "Failed to upload %s", doc)
 				}
+				log.Printf("[INFO] %s\n", doc)
 			}
 		}
 	}
