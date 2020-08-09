@@ -15,8 +15,8 @@ const (
 	httpTimeout         = 10 * time.Second
 	dialTimeout         = 5 * time.Second
 	tlsHandshakeTimeout = 5 * time.Second
-	repeaterFactor      = 1.5
-	repeatTimes         = 5
+	repeaterFactor      = 2
+	repeatTimes         = 10
 )
 
 var client *http.Client

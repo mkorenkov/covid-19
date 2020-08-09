@@ -21,7 +21,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-const documentsChanSize = 32
+const documentsChanSize = 1024
+const workersCount = documentsChanSize / 8
 const noopErr = sentinelError("Ignored (e.g. git file)")
 
 type sentinelError string
@@ -125,7 +126,8 @@ func onError(errorChan <-chan error) {
 	}
 }
 
-func process(ctx context.Context, cfg Config, docs <-chan documents.CollectionEntry, errorChan chan<- error) {
+func worker(ctx context.Context, wg *sync.WaitGroup, cfg Config, httpClient httpclient.HTTPClient, docs <-chan documents.CollectionEntry, errorChan chan<- error) {
+	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
@@ -135,7 +137,7 @@ func process(ctx context.Context, cfg Config, docs <-chan documents.CollectionEn
 				return
 			}
 			if doc.GetName() != "" {
-				if err := r(cfg, http.DefaultClient, doc); err != nil {
+				if err := r(cfg, httpClient, doc); err != nil {
 					errorChan <- errors.Wrapf(err, "Failed to upload %s", doc)
 				}
 				log.Printf("[INFO] %s\n", doc)
@@ -181,21 +183,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ctx := context.Background()
+	httpClient := httpclient.Retryable()
 	docChan := make(chan documents.CollectionEntry, documentsChanSize)
 
 	errorChan := make(chan error)
 	defer close(errorChan)
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+
 	go onError(errorChan)
 	go func() {
 		defer close(docChan)
 		parseAll(cfg.ImportDir, docChan, errorChan)
 	}()
-	go func() {
-		defer wg.Done()
-		process(context.Background(), cfg, docChan, errorChan)
-	}()
+	for i := 0; i < workersCount; i++ {
+		wg.Add(1)
+		go worker(ctx, &wg, cfg, httpClient, docChan, errorChan)
+	}
 	wg.Wait()
 }
