@@ -79,7 +79,7 @@ func Countries(ctx context.Context, httpclient HTTPClient) (map[string]*Country,
 		if len(row) > 1 {
 			record, err := newCountryFromRecord(row)
 			if err != nil {
-				return nil, errors.Wrapf(err, "country parse error, data row: %v", strings.Join(row, ";"))
+				return nil, errors.Wrapf(err, "country parse error, data row: '%v'", strings.Join(row, ";"))
 			}
 			dataSource[record.Name] = record
 		}
@@ -115,7 +115,7 @@ func States(ctx context.Context, httpclient HTTPClient) (map[string]*UnitedState
 		if len(row) > 1 {
 			record, err := newStateFromRecord(row)
 			if err != nil {
-				return nil, errors.Wrapf(err, "state parse error, data row: %v", strings.Join(row, ";"))
+				return nil, errors.Wrapf(err, "state parse error, data row: '%v'", strings.Join(row, ";"))
 			}
 			dataSource[record.Name] = record
 		}
